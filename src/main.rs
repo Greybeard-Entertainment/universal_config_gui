@@ -1,22 +1,94 @@
+use std::{collections::HashSet, sync::Arc};
+
 use iced::{Sandbox, Element, widget::TextInput};
 
-pub struct HelloWorld{
-    text: String,
-    previous_inputs: Vec<String>
-}
+#[derive(Debug, Clone, Copy)]
+pub struct ConfigFileIndex(usize);
+
+#[derive(Debug, Clone, Copy)]
+pub struct ConfigVariableIndex(usize);
 
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    TextInputChanged(String),
-    Submit
+    NewFileLoadRequested{
+        file_path: String
+    },
+    ExistingFileSaveRequested {
+        /// Index into the resident vector of config files, that can be used to identify the
+        file: ConfigFileIndex,
+    },
+    ChangeOfVariable {
+        file: ConfigFileIndex,
+        variable: ConfigVariableIndex,
+    },
+
 }
 
-impl Sandbox for HelloWorld {
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum KnownFormat {
+    #[default]
+    Json,
+    Toml, 
+    Yaml, 
+}
+
+#[derive(Debug, Clone)]
+pub struct PermittedValues {
+    all_acceptable_values: HashSet<Box<str>>,
+}
+
+
+#[derive(Debug, Clone)]
+pub struct PermittedCharacters {
+    all_acceptable_characters: HashSet<char>,
+}
+
+#[derive(Debug, Clone)]
+pub enum Variable {
+    Integer {
+        range: [u128; 2],
+        value: u128
+    },
+    Float {
+        range: [f64; 2],
+        value: f64
+    },
+    DecimalFraction {
+        range: [f64; 2],
+        value: f64 // FIXME: Use decimal 
+    },
+    String {
+        permitted_values: Arc<PermittedCharacters>,
+        value: String,
+    },
+    Enumeration {
+        permitted_values: Arc<PermittedValues>,
+        value: String,
+    }, 
+    Group {
+        values: Vec<Variable>,
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ConfigFile {
+    path: std::path::PathBuf,
+    format: KnownFormat,
+
+    variables: Vec<Variable>
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ConfigUi {
+    config_files: Vec<ConfigFile>
+}
+
+impl Sandbox for ConfigUi {
     type Message = Message;
 
-    fn new() -> HelloWorld {
-        HelloWorld { text: "".to_owned(), previous_inputs: Vec::new() }
+    fn new() -> Self {
+        Self::default()
     }
 
     fn title(&self) -> String {
@@ -24,41 +96,14 @@ impl Sandbox for HelloWorld {
     }
 
     fn update(&mut self, message: Self::Message) {
-        match message {
-            Message::TextInputChanged(string) => self.text = string,
-            Message::Submit => self.previous_inputs.push(self.text.clone())
-        }
+        todo!()
     }
 
     fn view(&self) -> Element<Self::Message> {
-        let column = iced::widget::Column::new();
-        let text_input = TextInput::new("Hello, World!", self.text.as_ref())
-            .on_input(Message::TextInputChanged)
-            .on_submit(Message::Submit);
-
-        let button = iced::widget::button("submit")
-            .on_press(Message::Submit);
-
-        let row = iced::widget::Row::new();
-
-        let row = row.push(text_input).push(button).padding(10).spacing(10);
-
-
-        let column = column.push(row);
-
-        let mut elements: Vec<_> = Vec::new();
-        for element in &self.previous_inputs {
-            elements.push(Element::from(iced::widget::Text::new(element.clone())));
-        }
-        let elements = iced::widget::Column::with_children(elements).padding(10);
-
-
-        column
-            .push(elements)
-            .into()
+        todo!()
     }
 }
 
 fn main() {
-    let _ = HelloWorld::run(iced::Settings::default());
+    let _ = ConfigUi::run(iced::Settings::default());
 }
